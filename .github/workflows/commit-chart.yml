@@ -1,89 +1,113 @@
 name: Generate Commit Trend
 
 on:
-  push:
-    branches:
-      - main
-      - master
+push:
+branches:
+- main
 
 permissions:
-  contents: write
+contents: write
 
 jobs:
-  generate-chart:
-    runs-on: ubuntu-latest
+generate-chart:
+if: "!contains(github.event.head_commit.message, '[skip ci]')"
+runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
 
-      - name: Generate Weekly Commit Data
-        run: |
-          python << 'EOF'
-          import subprocess
-          import datetime
-          from collections import defaultdict
+steps:
+  - name: Checkout Repository
+    uses: actions/checkout@v4
+    with:
+      fetch-depth: 0
 
-          commits = subprocess.check_output(
-              ["git", "log", "--pretty=format:%ad", "--date=short"]
-          ).decode().splitlines()
+  - name: Generate Weekly Commit Data
+    run: |
+      python << 'EOF'
+      import os
+      import subprocess
+      import datetime
+      from collections import defaultdict
 
-          weekly = defaultdict(int)
+      commits = subprocess.check_output(
+          ["git", "log", "--pretty=format:%ad", "--date=short"]
+      ).decode().splitlines()
 
-          for d in commits:
-              dt = datetime.datetime.strptime(d, "%Y-%m-%d")
-              year, week, _ = dt.isocalendar()
-              weekly[f"{year}-W{week}"] += 1
+      weekly = defaultdict(int)
 
-          weeks = sorted(weekly.keys())[-12:]
+      for d in commits:
+          dt = datetime.datetime.strptime(d, "%Y-%m-%d")
+          year, week, _ = dt.isocalendar()
+          weekly[f"{year}-W{week}"] += 1
 
-          width = 800
-          height = 300
+      weeks = sorted(weekly.keys())[-12:]
 
-          svg = f'''
-          <svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}">
-          <style>
-          .title {{ fill:white; font-size:20px; font-family:Arial; }}
-          .label {{ fill:#cccccc; font-size:12px; font-family:Arial; }}
-          .bar {{ fill:#00D4AA; }}
-          </style>
-          <rect width="100%" height="100%" fill="#0d1117"/>
-          <text x="20" y="30" class="title">STS_Ecom Weekly Commit Trend</text>
+      width = 900
+      height = 350
+
+      svg = f'''
+      <svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}">
+      <style>
+      .title {{ fill:white; font-size:22px; font-family:Arial; font-weight:bold; }}
+      .label {{ fill:#cccccc; font-size:12px; font-family:Arial; }}
+      .bar {{ fill:#00D4AA; }}
+      </style>
+
+      <rect width="100%" height="100%" fill="#0d1117"/>
+
+      <text x="20" y="35" class="title">
+      STS_Ecom Weekly Commit Trend
+      </text>
+      '''
+
+      max_val = max([weekly[w] for w in weeks], default=1)
+
+      bar_width = 45
+      gap = 18
+      x = 60
+
+      for w in weeks:
+          count = weekly[w]
+          h = (count / max_val) * 220
+
+          svg += f'''
+          <rect class="bar"
+                x="{x}"
+                y="{280-h}"
+                width="{bar_width}"
+                height="{h}" />
+
+          <text class="label"
+                x="{x}"
+                y="305">
+                {w[-2:]}
+          </text>
+
+          <text class="label"
+                x="{x}"
+                y="{270-h}">
+                {count}
+          </text>
           '''
 
-          max_val = max([weekly[w] for w in weeks], default=1)
+          x += bar_width + gap
 
-          bar_width = 40
-          gap = 20
-          x = 50
+      svg += "</svg>"
 
-          for w in weeks:
-              count = weekly[w]
+      os.makedirs("assets", exist_ok=True)
 
-              h = (count/max_val) * 180
+      with open("assets/commit-trend.svg", "w") as f:
+          f.write(svg)
 
-              svg += f'''
-              <rect class="bar" x="{x}" y="{250-h}" width="{bar_width}" height="{h}" />
-              <text class="label" x="{x}" y="270">{w[-2:]}</text>
-              <text class="label" x="{x}" y="{240-h}">{count}</text>
-              '''
+      EOF
 
-              x += bar_width + gap
+  - name: Commit SVG
+    run: |
+      git config user.name "github-actions"
+      git config user.email "github-actions@github.com"
 
-          svg += "</svg>"
+      git add assets/commit-trend.svg
 
-          with open("assets/commit-trend.svg","w") as f:
-              f.write(svg)
+      git diff --cached --quiet && exit 0
 
-          EOF
-
-      - name: Commit SVG
-        run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-
-          git add assets/commit-trend.svg
-
-          git commit -m "Update commit trend chart" || echo "No changes"
-
-          git push
+      git commit -m "Update commit trend chart [skip ci]"
+      git push
