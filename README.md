@@ -26,7 +26,7 @@
 
 # 💼 Experience
 
-## 🏭 AM/NS India — Junior Software Developer – Automation & Backend Systems *(12/2024 – Present)*
+## 🏭 AM/NS India — Software Developer – Automation & Backend Systems *(12/2024 – Present)*
 
 - Developed backend data processing systems for real-time industrial applications ensuring reliable data flow across multiple automation layers.
 - Built and maintained backend integration logic for communication between Level-1, Level-2, and Level-3 systems.
