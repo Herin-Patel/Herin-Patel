@@ -127,6 +127,25 @@
 
 ---
 
+# 🛒 E-Commerce Backend System Development Dashboard 
+<div align="center"> 
+  <img src="https://raw.githubusercontent.com/Herin-Patel/STS_Ecom/main/assets/commit-trend.svg" /> 
+</div> 
+
+### Current Development Progress 
+✅ Spring Boot Project Setup 
+✅ MySQL Database Integration 
+✅ Spring Data JPA & Hibernate 
+✅ User Authentication 
+✅ JWT Security Implementation 
+✅ Role Based Access Control (RBAC) 
+🔄 Product Management APIs 
+🔄 Cart Management APIs 
+🔄 Order Management APIs 
+🔜 AWS Deployment 
+🔜 Microservices Architecture 
+--- > This project is being actively developed with continuous commits and feature additions.
+
 # 📈 GitHub Stats
 
 <div align="center">
